@@ -1,0 +1,11 @@
+services:
+  metabase:
+    image: metabase/metabase
+    ports:
+      - "3000:3000"
+    # Metabase reads a consistent SNAPSHOT (warehouse/dashboard.db), never the
+    # live data.db the crawler writes -- concurrent read of a mid-write SQLite
+    # file reports "malformed". Refresh the snapshot after a crawl:
+    #   sqlite3 data.db ".backup warehouse/dashboard.db"
+    volumes:
+      - ./warehouse:/data:ro

@@ -1,0 +1,8 @@
+# Niches under test — tracked daily (crawled deep) and reported by watch.py
+motorcycle-riding-gear-face-masks
+motorcycle-riding-gear-balaclavas
+sports-face-masks
+washer-dryer-accessories
+kitchen-tapware
+water-filters
+water-dispensers
