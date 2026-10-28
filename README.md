@@ -9,8 +9,8 @@ Metabase gives a click-to-explore dashboard.
 - **Scrapy** paginates each category's ajax listing endpoint (`/<slug>/?ajax=true&page=N`,
   ~40 products/page as JSON with price, seller, brand, rating, reviews, `itemSoldCntShow`).
   Categories come from the Daraz sitemap (`daraz/categories_all.py`, 5,932 slugs).
-- Requests go through a residential proxy (liveproxies, rotating sticky sessions; password in
-  macOS Keychain) — or MrScraper / direct, chosen by the `PROXY` env var.
+- Requests go through a proxy with one sticky IP per category (Decodo datacenter or liveproxies;
+  passwords in macOS Keychain), or through MrScraper or a direct connection, chosen by the `PROXY` env var. The crawler obeys robots.txt.
 - Pages are followed only while they still show "X sold" items, up to `MAX_PAGES` and the
   category's real end (`totalResults`). Repeated/stale pages Daraz sometimes serves are detected
   and re-fetched. Every page is logged in `crawl_log`, so a crawl resumes where it stopped.
@@ -18,12 +18,29 @@ Metabase gives a click-to-explore dashboard.
   velocity (units/week). `analyze.py` is the single Opportunity Score; `brief.py` writes
   market-entry briefs; `audit.py` checks data quality first.
 
+## Coverage, accuracy, recency
+
+From real runs (October 2026):
+
+| | Number | How it's measured |
+|---|---|---|
+| Coverage | 4,384 of 4,389 live categories (99.9%); deep run: 16,034 pages, 354,362 distinct products, 131,153 with sales | `crawl_log` per page; "live" = page 1 returns listings |
+| Accuracy | price 162/163 (99.4%) and 196/197 (99.5%) match the live site | `audit.py --spot` re-fetches random category pages and diffs the stored rows |
+| Recency | daily at 06:00 (launchd) | `pipeline.py` quality gate: no more than 5% of page-1 fetches failed, at least 90% of the best live-category count, at least 90% spot-check match |
+
+The gate also blocks bad data. From 2026-10-19 to 2026-10-28 the proxy plan had expired: every
+fetch failed, every run was marked failed, and no broken snapshot was scored. The pipeline was
+then moved to a second provider (`PROXY=decodo`).
+
+Known limits: Daraz's "X sold" is a rolling recent window, not lifetime sales. About 97% of
+listings say "No Brand", and some of those are mislabelled real brands.
+
 ## Setup
 
 ```bash
 uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements.txt
-cp .env.example .env      # fill LIVEPROXIES_HOST/PORT/USER (no secrets in .env)
-security add-generic-password -U -s liveproxies-proxy -a $USER -w   # proxy password
+cp .env.example .env      # fill DECODO_USER (or LIVEPROXIES_*); no secrets in .env
+security add-generic-password -U -s decodo-proxy -a $USER -w   # proxy password
 ```
 
 ## Run
@@ -33,7 +50,7 @@ See `CLAUDE.md` → Commands for the full list. Short version:
 ```bash
 .venv/bin/pytest -q
 date +%F > .run_id                                   # new snapshot
-caffeinate -is env PROXY=liveproxies RUN_ID=$(cat .run_id) DARAZ_ALL=1 RAW_OFF=1 \
+caffeinate -is env PROXY=decodo RUN_ID=$(cat .run_id) DARAZ_ALL=1 RAW_OFF=1 \
   .venv/bin/scrapy crawl catalog -s CONCURRENT_REQUESTS=16 -s CONCURRENT_REQUESTS_PER_DOMAIN=16 \
   -s DOWNLOAD_DELAY=0 -s AUTOTHROTTLE_ENABLED=False -s DOWNLOAD_TIMEOUT=40   # rerun = resume
 .venv/bin/python audit.py            # data quality, limitations first

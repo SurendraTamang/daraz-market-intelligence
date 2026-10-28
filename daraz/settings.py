@@ -3,7 +3,7 @@ SPIDER_MODULES = ["daraz.spiders"]
 NEWSPIDER_MODULE = "daraz.spiders"
 
 # Daraz robots.txt disallows /catalog/; personal research only (see README ToS note).
-ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = True  # listing URLs (/<slug>/?ajax=true) are allowed; only /catalog/ search is disallowed
 
 # Low concurrency: every request costs proxy quota and raises block risk. Tune after the rate test.
 CONCURRENT_REQUESTS = 4
