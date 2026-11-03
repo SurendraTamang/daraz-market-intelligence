@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Opportunity CLI: ranked "what to sell" list. Scores come from analyze.py.
 
-    python opportunity.py --top 20
-    DARAZ_DB=other.db python opportunity.py
+    python -m analytics.opportunity --top 20
+    DARAZ_DB=other.db python -m analytics.opportunity
 """
 import argparse
 from collections import defaultdict
 
-from analyze import load_rows, score_rows
+from analytics.analyze import load_rows, score_rows
 from daraz import db
 
 BANDS = [(0, 300, "<300"), (300, 700, "300-700"), (700, 1500, "700-1.5k"),

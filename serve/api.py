@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Live data endpoint for the React dashboard.
 
-    uvicorn api:app --reload        # http://localhost:8000/api/data
+    uvicorn serve.api:app --reload        # http://localhost:8000/api/data
 
 Point the frontend at it with VITE_API_URL (see frontend/README). Serves the same
 payload as export_json.py, computed fresh from data.db on each request.
@@ -9,7 +9,7 @@ payload as export_json.py, computed fresh from data.db on each request.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from analyze import build_payload
+from analytics.analyze import build_payload
 
 app = FastAPI(title="Daraz Market API")
 app.add_middleware(

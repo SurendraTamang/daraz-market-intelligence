@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mine Daraz reviews of high-demand, weakly rated products: is the gap fixable?
 
-    PROXY=liveproxies python review_scan.py --top 30          # -> reviews/*.json + reviews/scan.csv
+    PROXY=liveproxies python -m analytics.review_scan --top 30          # -> reviews/*.json + reviews/scan.csv
 
 Candidates: page-1 products of the latest run with >= 300 sold, Rs 150-1,500, no brand, rated < 4.2
 over >= 20 reviews, in a niche with HHI < 2,500; skin/medical/cosmetic items excluded (refund and
@@ -16,9 +16,9 @@ import time
 
 import pandas as pd
 
-from analyze import load_rows, score_rows
+from analytics.analyze import load_rows, score_rows
 from daraz import db, transport
-from ds_report import niche_table
+from analytics.ds_report import niche_table
 
 EXCLUDE = re.compile(r"hair remov|wax|cream|ointment|serum|lotion|lipstick|kajal|eyeliner|perfume|fragrance|"
                      r"cologne|dental|teeth|wart|skin|herbal|oil\b|capsule|tablet|supplement|condom|sex|"

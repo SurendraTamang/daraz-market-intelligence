@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Export data.db -> frontend/src/data.json (bundled by the React build).
 
-Run after each crawl:  python export_json.py
+Run after each crawl:  python -m serve.export_json
 """
 import json
 import os
 
-from analyze import build_payload
+from analytics.analyze import build_payload
 
 OUT = "frontend/src/data.json"  # imported (bundled) so the single-file build works
 

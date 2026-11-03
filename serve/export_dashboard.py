@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Export the market-entry dashboard datasets (JSON row files) from the latest run.
 
-    python export_dashboard.py            # -> dashboard/*.json
+    python -m serve.export_dashboard            # -> dashboard/*.json
 
 coverage.json  one row: run, categories crawled/live/dead/empty, products, niches
 niches.json    top 50 niches, ranked on page 1 (fair); stats from every crawled page
@@ -11,7 +11,7 @@ price_bands.json  units sold by price band, page 1 of every category
 import json
 import os
 
-from analyze import latest_run, load_rows, niches, score_rows
+from analytics.analyze import latest_run, load_rows, niches, score_rows
 from daraz import db
 
 OUT = "dashboard"

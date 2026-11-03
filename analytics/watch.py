@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Watchlist report: how the niches you are testing move, day by day.
 
-    python watch.py                 # latest run vs ~a week earlier -> reports/watch_<run>.md + .csv
+    python -m analytics.watch                 # latest run vs ~a week earlier -> reports/watch_<run>.md + .csv
 
 For every niche in watchlist.txt: listings, sellers and units now vs the comparison run, then its
 top listings with the net change of Daraz's sold count per week (it looks like a rolling window,
@@ -14,7 +14,7 @@ import os
 
 import pandas as pd
 
-from analyze import latest_run
+from analytics.analyze import latest_run
 from daraz import db
 
 TOP = 15

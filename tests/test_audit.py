@@ -1,4 +1,4 @@
-from audit import compare_page
+from pipeline.audit import compare_page
 
 
 def test_compare_page():

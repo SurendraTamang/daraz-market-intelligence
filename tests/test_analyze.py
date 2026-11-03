@@ -1,6 +1,6 @@
 import pytest
 
-from analyze import niches, pct_rank, score_rows
+from analytics.analyze import niches, pct_rank, score_rows
 
 
 def row(nid, cat="tea", seller="s1", sold=100, price=500.0, rating=None, reviews=0,
@@ -84,20 +84,20 @@ def _db_with(rows):
 
 
 def test_load_rows_ranks_on_page1_when_pages_are_tagged():
-    from analyze import load_rows
+    from analytics.analyze import load_rows
     con = _db_with([("a", 1), ("b", 2), ("c", None)])   # c: untagged deep row from before tagging
     assert {r["nid"] for r in load_rows(con)} == {"a"}
     assert {r["nid"] for r in load_rows(con, max_page=None)} == {"a", "b", "c"}
 
 
 def test_load_rows_without_tags_keeps_everything():
-    from analyze import load_rows
+    from analytics.analyze import load_rows
     con = _db_with([("a", None), ("b", None)])           # legacy run: no page tags at all
     assert {r["nid"] for r in load_rows(con)} == {"a", "b"}
 
 
 def test_velocity_ignored_until_comparison_spans_six_days():
-    from analyze import load_rows
+    from analytics.analyze import load_rows
     con = _db_with([("a", 1)])                       # run 2026-10-12, tagged page 1
     con.execute("INSERT INTO crawl_log (run_id, category, page, status, items) VALUES ('2026-10-10','tea',1,'ok',40)")
     con.execute("INSERT INTO products (nid, name, price, category, sold_count, scraped_at, raw_json, seller_id) "

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Content audit for one crawl run. Run it before trusting any brief. Limitations print first.
 
-    python audit.py                         # latest run, no network
-    PROXY=liveproxies python audit.py --spot 5    # + live spot-check of 5 category pages
+    python -m pipeline.audit                         # latest run, no network
+    PROXY=liveproxies python -m pipeline.audit --spot 5    # + live spot-check of 5 category pages
 """
 import argparse
 import random
 
-from analyze import latest_run
+from analytics.analyze import latest_run
 from daraz import db, transport
 from daraz.crawl import parse_listing
 from daraz.utils import parse_sold_count, to_float

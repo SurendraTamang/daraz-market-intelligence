@@ -76,7 +76,7 @@ def test_velocity_uses_latest_two_of_three_runs():
 
 
 def test_latest_run_prefers_most_complete_crawl():
-    from analyze import latest_run
+    from analytics.analyze import latest_run
     con = db.connect(":memory:")
     assert latest_run(con) is None
     add(con, "A", "tea", "2026-08-19", 1)
@@ -132,7 +132,7 @@ def test_velocity_compares_about_a_week_back_on_daily_runs():
 
 
 def test_latest_run_prefers_newest_near_complete_run():
-    from analyze import latest_run
+    from analytics.analyze import latest_run
     con = db.connect(":memory:")
     for cat in ("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"):
         log(con, "2026-10-12", cat, 100)

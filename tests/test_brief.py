@@ -1,7 +1,7 @@
 import os
 
-from analyze import niches, score_rows
-from brief import md_text, render, write_briefs
+from analytics.analyze import niches, score_rows
+from analytics.brief import md_text, render, write_briefs
 from tests.test_analyze import row
 
 

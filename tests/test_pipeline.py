@@ -1,4 +1,4 @@
-from pipeline import gate
+from pipeline.run import gate
 
 GOOD = {"page1_total": 4900, "page1_failed": 40, "live": 4380, "best_live": 4389,
         "spot_checked": 150, "spot_price_ok": 149}
@@ -19,7 +19,7 @@ def test_gate_tolerates_first_run_and_no_spot_sample():
 
 
 def test_crawl_complete_requires_coverage_and_few_failures():
-    from pipeline import crawl_complete
+    from pipeline.run import crawl_complete
     assert crawl_complete(live=4380, best=4389, failed=10, total=4900)
     assert not crawl_complete(live=751, best=4389, failed=97, total=919)     # this morning's run
     assert not crawl_complete(live=4380, best=4389, failed=300, total=4900)  # too many failures

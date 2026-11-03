@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate a self-contained HTML market-opportunity report from data.db.
 
-    python report.py            # writes report.html
-    python report.py --db warehouse/dashboard.db
+    python -m analytics.report            # writes report.html
+    python -m analytics.report --db warehouse/dashboard.db
 
 No framework, no server, no CDN — one styled static page. Regenerate after a crawl.
 """

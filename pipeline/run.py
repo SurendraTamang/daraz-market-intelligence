@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Daily pipeline: crawl -> deepen -> audit (quality gate) -> outputs -> retain.
 
-    python pipeline.py                         # today's run (RUN_ID = today's date)
-    python pipeline.py --run 2026-10-14        # re-run / resume a day
-    python pipeline.py --from outputs          # start at a later stage
+    python -m pipeline.run                         # today's run (RUN_ID = today's date)
+    python -m pipeline.run --run 2026-10-14        # re-run / resume a day
+    python -m pipeline.run --from outputs          # start at a later stage
 
 Every stage is idempotent for its RUN_ID (crawl stages resume from crawl_log), so a failed day is
 fixed by running the same command again. Writes logs/<run>/<stage>.log and runs/<run>.json, holds
@@ -22,7 +22,7 @@ import time
 
 from daraz import db, transport
 from daraz.crawl import parse_listing
-from audit import compare_page
+from pipeline.audit import compare_page
 
 STAGES = ("crawl", "deepen", "audit", "outputs")  # retain disabled until migration to PostgreSQL (Plan A)
 FAST = ["-s", "DOWNLOAD_DELAY=0", "-s", "AUTOTHROTTLE_ENABLED=False", "-s", "DOWNLOAD_TIMEOUT=40"]
@@ -150,7 +150,7 @@ def stage_audit(run, logdir):
         stats["spot_price_ok"] += price_ok
     con.close()
     with open(f"{logdir}/audit.txt", "w") as f:  # the human-readable report, limitations first
-        subprocess.run([sys.executable, "audit.py", "--run", run], stdout=f, stderr=subprocess.STDOUT)
+        subprocess.run([sys.executable, "-m", "pipeline.audit", "--run", run], stdout=f, stderr=subprocess.STDOUT)
     fails = gate(stats)
     if fails:
         raise RuntimeError("quality gate failed: " + "; ".join(fails))
@@ -160,9 +160,9 @@ def stage_audit(run, logdir):
 def stage_outputs(run, logdir):
     weekly = datetime.date.fromisoformat(run).weekday() == 0  # Monday: refresh the shortlist
     with open(f"{logdir}/outputs.log", "w") as f:
-        for cmd in (["brief.py", "--top", "20"] + (["--write-shortlist"] if weekly else []),
-                    ["export_json.py"], ["export_dashboard.py"], ["ds_report.py"], ["watch.py"]):
-            subprocess.run([sys.executable, *cmd], stdout=f, stderr=subprocess.STDOUT, check=True)
+        for cmd in (["analytics.brief", "--top", "20"] + (["--write-shortlist"] if weekly else []),
+                    ["serve.export_json"], ["serve.export_dashboard"], ["analytics.ds_report"], ["analytics.watch"]):
+            subprocess.run([sys.executable, "-m", *cmd], stdout=f, stderr=subprocess.STDOUT, check=True)
     return {"shortlist_refreshed": weekly}
 
 
@@ -192,7 +192,7 @@ def main():
     ap.add_argument("--from", dest="start", choices=STAGES, default="crawl")
     a = ap.parse_args()
     datetime.date.fromisoformat(a.run)  # RUN_ID must be a date
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))  # launchd starts us elsewhere
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # launchd starts us elsewhere
     os.environ.setdefault("PROXY", "decodo")
 
     logdir = f"logs/{a.run}"

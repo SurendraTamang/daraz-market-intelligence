@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Market-entry briefs: briefs/index.md + one page per top niche (+ briefs/shortlist.txt).
 
-    python brief.py --top 20
-    python brief.py --write-shortlist --shortlist 50     # once, after a full crawl
+    python -m analytics.brief --top 20
+    python -m analytics.brief --write-shortlist --shortlist 50     # once, after a full crawl
 
 shortlist.txt feeds the weekly velocity crawl (CATEGORIES_FILE=briefs/shortlist.txt).
 """
@@ -10,7 +10,7 @@ import argparse
 import glob
 import os
 
-from analyze import latest_run, load_rows, niches, score_rows
+from analytics.analyze import latest_run, load_rows, niches, score_rows
 from daraz import db
 
 

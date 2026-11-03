@@ -4,7 +4,7 @@
 Run AFTER `docker compose up -d metabase` (wait for it to boot). Idempotent-ish:
 creates the admin user on first run; on later runs pass the same creds via env.
 
-    python provision_metabase.py
+    python -m serve.provision_metabase
 
 Env (optional): MB_URL, MB_EMAIL, MB_PASSWORD, MB_DB_PATH.
 """

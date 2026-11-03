@@ -1,6 +1,6 @@
 """Daraz market-analysis app — interactive Opportunity Score.
 
-    streamlit run app.py
+    python -m streamlit run serve/app.py
 
 Reads the DB READ-ONLY (safe while a crawl writes). Scores come from analyze.py (the one
 scorer); sliders change the weights, filters narrow the list after scoring.
@@ -8,7 +8,7 @@ scorer); sliders change the weights, filters narrow the list after scoring.
 import pandas as pd
 import streamlit as st
 
-from analyze import WEIGHTS, load_rows, score_rows
+from analytics.analyze import WEIGHTS, load_rows, score_rows
 from daraz import db
 
 st.set_page_config(page_title="Daraz Market Analyzer", page_icon="🛒", layout="wide")

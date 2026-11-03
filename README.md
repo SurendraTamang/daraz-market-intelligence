@@ -2,7 +2,23 @@
 
 Scrapes Daraz.com.np category listings to find **what sells** and **how crowded
 each category is** — for deciding what products to sell. Data lands in SQLite;
-Metabase gives a click-to-explore dashboard.
+a React dashboard (plus Streamlit and Metabase for internal use) sits on top.
+
+![Dashboard: top opportunities, category competition map, price vs units sold](docs/img/dashboard.png)
+
+## Project layout
+
+```
+daraz/        Scrapy crawler: spider, proxy transport, pipelines, SQLite schema (db.py)
+pipeline/     run.py: daily orchestrator (crawl → deepen → audit gate → outputs → retain); audit.py: quality gate
+analytics/    analyze.py (Opportunity Score, the only scorer), briefs, reports, weekly watch, review scan
+serve/        api.py (FastAPI), app.py (Streamlit), JSON exports, Metabase provisioning, analysis.sql
+scripts/      sitemap_categories.py: regenerates the 5,932 category slugs
+frontend/     React + TypeScript + Vite + Tailwind + Recharts dashboard
+tests/        pytest suite
+```
+
+Run everything from the repo root with `python -m <package>.<module>`.
 
 ## How it works
 
@@ -15,8 +31,8 @@ Metabase gives a click-to-explore dashboard.
   category's real end (`totalResults`). Repeated/stale pages Daraz sometimes serves are detected
   and re-fetched. Every page is logged in `crawl_log`, so a crawl resumes where it stopped.
 - Each crawl is one snapshot (`RUN_ID` = start date). Weekly re-crawls of the shortlist give
-  velocity (units/week). `analyze.py` is the single Opportunity Score; `brief.py` writes
-  market-entry briefs; `audit.py` checks data quality first.
+  velocity (units/week). `analytics/analyze.py` is the single Opportunity Score; `analytics/brief.py` writes
+  market-entry briefs; `pipeline/audit.py` checks data quality first.
 
 ## Coverage, accuracy, recency
 
@@ -26,7 +42,7 @@ From real runs (October 2026):
 |---|---|---|
 | Coverage | 4,384 of 4,389 live categories (99.9%); deep run: 16,034 pages, 354,362 distinct products, 131,153 with sales | `crawl_log` per page; "live" = page 1 returns listings |
 | Accuracy | price 162/163 (99.4%) and 196/197 (99.5%) match the live site | `audit.py --spot` re-fetches random category pages and diffs the stored rows |
-| Recency | daily at 06:00 (launchd) | `pipeline.py` quality gate: no more than 5% of page-1 fetches failed, at least 90% of the best live-category count, at least 90% spot-check match |
+| Recency | daily at 06:00 (launchd) | `pipeline/run.py` quality gate: no more than 5% of page-1 fetches failed, at least 90% of the best live-category count, at least 90% spot-check match |
 
 The gate also blocks bad data. From 2026-10-19 to 2026-10-28 the proxy plan had expired: every
 fetch failed, every run was marked failed, and no broken snapshot was scored. The pipeline was
@@ -53,8 +69,8 @@ date +%F > .run_id                                   # new snapshot
 caffeinate -is env PROXY=decodo RUN_ID=$(cat .run_id) DARAZ_ALL=1 RAW_OFF=1 \
   .venv/bin/scrapy crawl catalog -s CONCURRENT_REQUESTS=16 -s CONCURRENT_REQUESTS_PER_DOMAIN=16 \
   -s DOWNLOAD_DELAY=0 -s AUTOTHROTTLE_ENABLED=False -s DOWNLOAD_TIMEOUT=40   # rerun = resume
-.venv/bin/python audit.py            # data quality, limitations first
-.venv/bin/python brief.py --write-shortlist   # briefs/index.md + one page per niche
+.venv/bin/python -m pipeline.audit            # data quality, limitations first
+.venv/bin/python -m analytics.brief --write-shortlist   # briefs/index.md + one page per niche
 ```
 
 ## React dashboard (customer-facing) — `frontend/`
@@ -64,14 +80,14 @@ Interactive Opportunity Score, filters, live charts (revenue bar, price-vs-deman
 scatter, brand donut, demand gaps).
 
 ```bash
-python export_json.py                 # data.db -> frontend/src/data.json
+python -m serve.export_json                 # data.db -> frontend/src/data.json
 cd frontend && npm install
 npm run dev                           # http://localhost:5173 (live dev)
 npm run build                         # dist/ -> deploy to Cloudflare Pages / Vercel
 npm run build:single                  # dist-single/index.html (one self-contained file)
 ```
 
-Refresh data after a crawl: re-run `python export_json.py`, then rebuild.
+Refresh data after a crawl: re-run `python -m serve.export_json`, then rebuild.
 
 **Rebrand for a pitch:** edit `frontend/src/brand.ts` (logo, name, headline) and the
 accent hex in `frontend/tailwind.config.js`.
@@ -93,14 +109,14 @@ offline, single-file, and as an Artifact. To have it refresh live from `data.db`
 without a rebuild, run the API and point the app at it:
 
 ```bash
-uvicorn api:app --port 8000            # http://localhost:8000/api/data
+uvicorn serve.api:app --port 8000            # http://localhost:8000/api/data
 # then, in another shell:
 cd frontend && VITE_API_URL=http://localhost:8000 npm run dev
 ```
 
 The header shows a green **● live** badge when connected; otherwise it silently
-falls back to the bundled snapshot. `analyze.py` is the shared scoring module used
-by both `export_json.py` (static) and `api.py` (live).
+falls back to the bundled snapshot. `analytics/analyze.py` is the shared scoring module used
+by both `serve/export_json.py` (static) and `serve/api.py` (live).
 
 ## Analysis app (Streamlit) — internal tool
 
@@ -109,10 +125,10 @@ category, brand, rating, score weights) and watch the ranked "what to sell" list
 and charts update live. Reads `data.db` read-only (safe during a crawl).
 
 ```bash
-streamlit run app.py        # opens http://localhost:8501
+python -m streamlit run serve/app.py        # opens http://localhost:8501
 ```
 
-Opportunity Score comes from `analyze.py` (demand, velocity, competition, quality gap,
+Opportunity Score comes from `analytics/analyze.py` (demand, velocity, competition, quality gap,
 affordability, generic) — the same scorer the CLI, API and briefs use.
 
 ## Dashboard (auto-built)
@@ -126,11 +142,11 @@ sqlite3 data.db ".backup warehouse/dashboard.db"   # refresh snapshot
 sqlite3 warehouse/dashboard.db "PRAGMA journal_mode=DELETE"   # data.db is WAL; Metabase mounts read-only
 open -a Docker                                      # start Docker Desktop
 docker compose up -d metabase                       # wait ~30s for boot
-python provision_metabase.py                        # build the whole dashboard
+python -m serve.provision_metabase                        # build the whole dashboard
 ```
 
 Opens at http://localhost:3000/dashboard/2 (login `admin@daraz.local` /
-`Daraz-admin1`). `provision_metabase.py` creates the SQLite connection and all
+`Daraz-admin1`). `serve/provision_metabase.py` creates the SQLite connection and all
 six panels via the Metabase API — no manual clicking:
 
 - Top products by `est_revenue`
@@ -140,7 +156,7 @@ six panels via the Metabase API — no manual clicking:
 - Demand gaps: high `sold_count` + low `rating` (do it better)
 - Top sellers by revenue
 
-Same queries also in `analysis.sql` — run directly: `sqlite3 data.db < analysis.sql`.
+Same queries also in `serve/analysis.sql` — run directly: `sqlite3 data.db < serve/analysis.sql`.
 
 ## Config
 

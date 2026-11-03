@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Data-science market report for the latest run -> one self-contained HTML page.
 
-    python ds_report.py            # -> reports/market_report_<run>.html
+    python -m analytics.ds_report            # -> reports/market_report_<run>.html
 
 Analysis on page-1 listings (equal depth for every category):
   1 coverage & data quality      4 price vs demand (rank correlation, price bands)
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from analyze import MIN_REVIEWS, WEIGHTS, latest_run, load_rows, score_rows
+from analytics.analyze import MIN_REVIEWS, WEIGHTS, latest_run, load_rows, score_rows
 from daraz import db
 
 RNG = np.random.default_rng(42)

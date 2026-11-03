@@ -1,4 +1,4 @@
-from watch import movers
+from analytics.watch import movers
 
 
 def test_movers_weekly_delta_and_price_change():
@@ -17,7 +17,7 @@ def test_movers_scales_to_a_week():
 
 
 def test_niche_change_is_like_for_like():
-    from watch import niche_change
+    from analytics.watch import niche_change
     before = [{"nid": "a", "sold": 100, "seller": "s1", "page": 1}]
     now = [{"nid": "a", "sold": 130, "seller": "s1", "page": 1},
            {"nid": "x", "sold": 5000, "seller": "s9", "page": 4}]     # deeper crawl today: not growth
