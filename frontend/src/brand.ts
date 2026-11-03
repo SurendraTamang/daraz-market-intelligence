@@ -6,6 +6,6 @@ export const BRAND = {
   name: "MarketScope",                         // used in the browser tab
   headline: "What sells on Daraz — and what you should sell",
   tagline:
-    "Opportunity Score ranks each product by demand, affordability, quality gap, " +
-    "and competition. Est. revenue = price × cumulative units sold.",
+    "Opportunity Score ranks each product by demand, affordability, rating gap " +
+    "and seller competition.",
 };

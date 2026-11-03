@@ -168,6 +168,7 @@ def build_payload(db_path=None):
     """
     con = db.connect_ro(db_path)
     products = score_rows(load_rows(con))
+    run = latest_run(con)
     con.close()
 
     by_cat = defaultdict(list)
@@ -197,7 +198,7 @@ def build_payload(db_path=None):
     } for p in products[:PAYLOAD_TOP]]
 
     return {
-        "meta": {"products": len(products), "units": sum(p["sold_count"] for p in products),
+        "meta": {"run": run, "products": len(products), "units": sum(p["sold_count"] for p in products),
                  "revenue": sum(round(p["est_revenue"] or 0) for p in products),
                  "sellers": len({_seller_key(p) for p in products}), "categories": len(categories)},
         "categories": categories,

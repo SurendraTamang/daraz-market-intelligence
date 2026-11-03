@@ -27,7 +27,7 @@ export interface Category {
 }
 
 export interface Data {
-  meta: { products: number; units: number; revenue: number; sellers: number; categories: number };
+  meta: { run?: string; products: number; units: number; revenue: number; sellers: number; categories: number };
   categories: Category[];
   products: Product[];
 }
