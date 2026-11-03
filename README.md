@@ -148,6 +148,8 @@ Edit `daraz/config.py` — `CATEGORY_SLUGS`; env vars `DARAZ_ALL`, `CATEGORIES_F
 
 ## Notes
 
-- `robots.txt` disallows `/catalog/`; MrScraper bypasses anti-bot. Against Daraz
-  ToS — personal-research use only.
+- Scope: public category listing pages only. `ROBOTSTXT_OBEY = True`; robots.txt allows the
+  `/<slug>/?ajax=true&page=N` listing URLs (checked for all 5,932 slugs) and disallows `/catalog/`
+  search, which is never crawled. No personal data is collected (products, prices and seller
+  store names only). Low concurrency and per-category sessions keep the load small.
 - `.env` and `data.db` are gitignored. Rotate any token that was shared.

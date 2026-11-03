@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Fetch ALL Daraz category slugs from the sitemap (via MrScraper, which
-decompresses the .gz and bypasses anti-bot). Writes daraz/categories_all.py.
+"""Fetch ALL Daraz category slugs from the sitemap (fetched through the
+configured transport, which also decompresses the .gz). Writes daraz/categories_all.py.
 
     python sitemap_categories.py
 """
